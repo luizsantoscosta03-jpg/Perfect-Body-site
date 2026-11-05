@@ -1,0 +1,21 @@
+BODYPERFECT - ARQUIVOS PARA O GITHUB PAGES
+
+Arquivos desta pasta:
+- index.html: página principal do site.
+- auth.js: cadastro, login, sessão e painel inicial do aluno.
+- supabase-config.js: endereço e chave pública do projeto Supabase.
+
+COMO PUBLICAR:
+1. Abra o repositório Perfect-Body-site no GitHub.
+2. Clique em Adicionar arquivo > Carregar arquivos.
+3. Arraste os três arquivos (index.html, auth.js e supabase-config.js) para a página.
+4. Se o GitHub perguntar sobre substituir index.html, confirme a substituição. Isso atualiza a página principal com a versão preparada para autenticação.
+5. Escreva uma mensagem de commit, por exemplo: Integra Supabase ao BodyPerfect.
+6. Clique em Confirmar alterações.
+7. Aguarde alguns minutos e abra o site publicado.
+
+IMPORTANTE:
+- Os três arquivos devem ficar juntos na raiz do repositório.
+- A chave incluída é a chave publicável (publishable), apropriada para frontend com RLS configurado.
+- Nunca coloque uma chave secreta/service_role no GitHub.
+- O painel administrativo ainda precisa de uma etapa posterior para salvar alunos, treinos e profissionais diretamente nas tabelas do Supabase; esta versão já prepara cadastro/login e leitura de treinos do aluno.
