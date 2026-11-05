@@ -1,0 +1,908 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>BodyPerfect</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+:root {
+  /* Layout: ficha de academia. Cabeçalho com marca e abas, alunos como fichas com escala de IMC, treinos como cartões de lista de exercícios, áreas futuras sinalizadas com fita de obra. */
+  color-scheme: light;
+  --bg: #EDEFF2;
+  --surface: #FFFFFF;
+  --ink: #11151B;
+  --muted: #586170;
+  --line: #D4D9E0;
+  --accent: #FF5A1F;
+  --accent-ink: #11151B;
+  --accent-soft: #FFE4D9;
+  --baixo: #1F5FBF;   --baixo-bg: #DCE8FA;
+  --normal: #0E7547;  --normal-bg: #DCF2E6;
+  --sobre: #8A5A00;   --sobre-bg: #FBEBC8;
+  --obeso: #B42318;   --obeso-bg: #FDE4E1;
+  --seg-baixo: #5B93E8; --seg-normal: #2FB67A; --seg-sobre: #F2B134; --seg-obeso: #E5584B;
+  --shadow: 0 1px 0 rgba(17, 21, 27, .05), 0 10px 26px -14px rgba(17, 21, 27, .3);
+  --font-display: 'Barlow Condensed', 'Arial Narrow', system-ui, sans-serif;
+  --font-body: 'Barlow', 'Segoe UI', system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #0D1014; --surface: #161A21; --ink: #ECEFF4; --muted: #98A1B1; --line: #272D38;
+    --accent-soft: #3B2014;
+    --baixo: #8DB7FF; --baixo-bg: #1B2C4A;
+    --normal: #5CD79C; --normal-bg: #12332A;
+    --sobre: #F2C25A; --sobre-bg: #3A2D0C;
+    --obeso: #FF8C7F; --obeso-bg: #3B1B1A;
+    --shadow: 0 0 0 rgba(0, 0, 0, 0);
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #0D1014; --surface: #161A21; --ink: #ECEFF4; --muted: #98A1B1; --line: #272D38;
+  --accent-soft: #3B2014;
+  --baixo: #8DB7FF; --baixo-bg: #1B2C4A;
+  --normal: #5CD79C; --normal-bg: #12332A;
+  --sobre: #F2C25A; --sobre-bg: #3A2D0C;
+  --obeso: #FF8C7F; --obeso-bg: #3B1B1A;
+  --shadow: 0 0 0 rgba(0, 0, 0, 0);
+}
+
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0; background: var(--bg); color: var(--ink);
+  font-family: var(--font-body); font-size: 16px; line-height: 1.5;
+  padding-block: 0;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.app { display:none; max-width: 1080px; margin: 0 auto; padding-block: 20px 40px; }
+h1, h2, h3 { font-family: var(--font-display); margin: 0; text-transform: uppercase; letter-spacing: .01em; text-wrap: balance; line-height: 1; }
+h1 { font-size: clamp(38px, 8vw, 62px); font-weight: 800; }
+h2 { font-size: 28px; font-weight: 700; }
+h3 { font-size: 22px; font-weight: 700; }
+p { margin: 0; }
+a { color: inherit; }
+:focus-visible { outline: 3px solid var(--ink); outline-offset: 2px; border-radius: 6px; }
+.num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+
+/* cabeçalho */
+.top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 14px 24px; padding-bottom: 18px; border-bottom: 3px solid var(--ink); }
+.brand { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; font-family: var(--font-display); font-weight: 800; font-size: 32px; letter-spacing: .02em; text-transform: uppercase; line-height: 1; }
+.brand svg { width: 36px; height: 36px; flex: none; }
+.brand small { display: block; font-family: var(--font-body); font-weight: 500; font-size: 11px; letter-spacing: .14em; color: var(--muted); margin-top: 3px; }
+.nav { display: flex; flex-wrap: wrap; gap: 6px; }
+.nav a { text-decoration: none; padding: 8px 14px; border-radius: 999px; font-weight: 600; font-size: 15px; border: 1px solid transparent; min-height: 40px; display: inline-flex; align-items: center; gap: 6px; }
+.nav a:hover { border-color: var(--line); background: var(--surface); }
+.nav a[aria-current="page"] { background: var(--accent); color: var(--accent-ink); }
+.soon { font-size: 10px; letter-spacing: .08em; text-transform: uppercase; font-weight: 700; background: var(--bg); color: var(--muted); border-radius: 5px; padding: 1px 6px; }
+
+.banner { margin-top: 16px; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; background: var(--accent-soft); border: 1px solid var(--accent); border-radius: 12px; padding: 10px 14px; font-size: 14px; }
+.banner span { flex: 1 1 260px; min-width: 0; }
+
+.page-head { display: grid; gap: 12px; margin: 34px 0 24px; max-width: 62ch; justify-items: start; }
+.page-head p { color: var(--muted); }
+
+/* botões e campos */
+.btn { font: inherit; font-weight: 600; font-size: 15px; border-radius: 10px; padding: 10px 16px; min-height: 44px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; }
+.btn:hover { border-color: var(--ink); }
+.btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.btn.primary:hover { border-color: var(--ink); }
+.btn.small { min-height: 36px; padding: 6px 12px; font-size: 14px; }
+.btn.danger:hover { border-color: var(--obeso); color: var(--obeso); }
+.btn[data-armed] { background: var(--obeso-bg); color: var(--obeso); border-color: var(--obeso); }
+.field { display: grid; gap: 6px; min-width: 0; }
+.field label { font-size: 13px; font-weight: 600; letter-spacing: .02em; }
+.field .hint { font-size: 13px; color: var(--muted); }
+input, select { font: inherit; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; min-height: 44px; width: 100%; min-width: 0; }
+input:hover, select:hover { border-color: var(--muted); }
+input:focus-visible, select:focus-visible { outline: 3px solid var(--accent); outline-offset: 0; border-color: var(--ink); }
+.error { color: var(--obeso); background: var(--obeso-bg); border-radius: 10px; padding: 10px 12px; font-size: 14px; font-weight: 500; }
+.error[hidden] { display: none; }
+
+.toolbar { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 14px 24px; margin-bottom: 20px; }
+.toolbar .field { width: min(320px, 100%); }
+.acoes { display: flex; flex-wrap: wrap; gap: 8px; }
+.count { color: var(--muted); font-size: 15px; }
+
+/* IMC */
+.badge { font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; padding: 3px 9px; border-radius: 6px; white-space: nowrap; }
+.k-baixo { background: var(--baixo-bg); color: var(--baixo); }
+.k-normal { background: var(--normal-bg); color: var(--normal); }
+.k-sobre { background: var(--sobre-bg); color: var(--sobre); }
+.k-obeso { background: var(--obeso-bg); color: var(--obeso); }
+.gauge { position: relative; padding-bottom: 22px; }
+.gauge .bar { display: flex; gap: 2px; height: 12px; border-radius: 999px; overflow: hidden; }
+.gauge .bar i { display: block; height: 100%; }
+.gauge .s-baixo { background: var(--seg-baixo); } .gauge .s-normal { background: var(--seg-normal); }
+.gauge .s-sobre { background: var(--seg-sobre); } .gauge .s-obeso { background: var(--seg-obeso); }
+.gauge .mk { position: absolute; top: -5px; width: 6px; height: 22px; margin-left: -3px; background: var(--ink); border: 2px solid var(--surface); border-radius: 4px; }
+.gauge .tk { position: absolute; bottom: 0; font-family: var(--font-mono); font-size: 11px; color: var(--muted); transform: translateX(-50%); }
+.gauge.compact { padding-bottom: 0; }
+.gauge.compact .tk { display: none; }
+
+/* cartões de aluno */
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); gap: 20px; }
+.aluno, .treino-card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; box-shadow: var(--shadow); padding: 18px; display: grid; gap: 12px; align-content: start; min-width: 0; }
+.aluno-top { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px; }
+.mat { font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.imc-line { display: flex; align-items: baseline; gap: 8px; }
+.imc-line strong { font-family: var(--font-mono); font-weight: 500; font-size: 30px; font-variant-numeric: tabular-nums; }
+.imc-line span { color: var(--muted); font-size: 13px; font-weight: 600; letter-spacing: .08em; }
+.treino-txt { font-size: 14px; color: var(--muted); }
+.treino-txt .nv { display: inline-block; font-weight: 700; color: var(--ink); margin-right: 6px; }
+.card-acoes { display: flex; flex-wrap: wrap; gap: 8px; }
+
+.empty { background: var(--surface); border: 2px dashed var(--line); border-radius: 14px; padding: 28px 20px; display: grid; gap: 14px; justify-items: start; color: var(--muted); grid-column: 1 / -1; }
+
+/* formulários */
+.split { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 340px); gap: 28px; align-items: start; }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 20px; display: grid; gap: 16px; box-shadow: var(--shadow); min-width: 0; }
+.grid2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.span2 { grid-column: 1 / -1; }
+.niveis { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; border: 0; padding: 0; margin: 0; min-width: 0; }
+.niveis legend { font-size: 13px; font-weight: 600; letter-spacing: .02em; padding: 0; margin-bottom: 8px; }
+.nivel { position: relative; min-width: 0; }
+.nivel input { position: absolute; opacity: 0; inset: 0; width: 100%; height: 100%; margin: 0; cursor: pointer; }
+.nivel label { display: grid; gap: 4px; border: 1px solid var(--line); border-radius: 12px; padding: 12px; background: var(--surface); height: 100%; }
+.nivel label b { font-family: var(--font-display); text-transform: uppercase; font-size: 20px; letter-spacing: .02em; }
+.nivel label span { font-size: 12px; color: var(--muted); line-height: 1.35; }
+.nivel input:checked + label { border-color: var(--ink); box-shadow: 0 0 0 2px var(--accent); }
+.nivel input:focus-visible + label { outline: 3px solid var(--ink); outline-offset: 2px; }
+.check { display: flex; gap: 10px; align-items: flex-start; font-size: 14px; }
+.check input { width: 20px; min-height: 20px; height: 20px; margin: 2px 0 0; padding: 0; accent-color: var(--accent); }
+.receipt { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 18px 20px; display: grid; gap: 14px; box-shadow: var(--shadow); min-width: 0; }
+.receipt .note { font-size: 13px; color: var(--muted); }
+.bloco { display: grid; gap: 8px; }
+.bloco h3 { font-size: 18px; color: var(--muted); }
+
+/* ficha */
+.ficha-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: start; gap: 10px; }
+.ficha-head h2 { margin: 6px 0 4px; font-size: 36px; }
+.ficha-head .sub { color: var(--muted); font-size: 15px; }
+.imc-big { display: flex; align-items: baseline; gap: 10px; }
+.imc-big strong { font-family: var(--font-mono); font-weight: 500; font-size: 52px; line-height: 1; font-variant-numeric: tabular-nums; }
+.imc-big .lbl { color: var(--muted); font-weight: 600; letter-spacing: .1em; }
+.inline { display: flex; flex-wrap: wrap; gap: 8px; }
+.inline input { flex: 1 1 140px; width: auto; }
+.resumo-linha { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 14px; font-size: 15px; color: var(--muted); }
+.busca { display: flex; flex-wrap: wrap; gap: 10px; align-items: end; margin-bottom: 22px; }
+.busca .field { width: min(260px, 100%); }
+.resultado { max-width: 680px; }
+
+/* treinos */
+.tc-head { display: flex; gap: 12px; align-items: center; }
+.letra { flex: none; width: 46px; height: 46px; border-radius: 12px; background: var(--ink); color: var(--bg); display: grid; place-items: center; font-family: var(--font-display); font-weight: 800; font-size: 28px; }
+.foco { color: var(--muted); font-size: 14px; margin-top: 2px; }
+.ex-lista { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; }
+.ex-lista li { display: flex; justify-content: space-between; gap: 12px; padding: 7px 0; border-bottom: 1px dashed var(--line); font-size: 14px; }
+.ex-lista li span:first-child { min-width: 0; overflow-wrap: anywhere; }
+.ex-lista li .num { color: var(--muted); white-space: nowrap; }
+.ex-lista li.mais { color: var(--muted); border-bottom: 0; }
+.meta-t { font-size: 13px; color: var(--muted); }
+.tc-acoes { display: flex; flex-wrap: wrap; gap: 8px; }
+.ex-row { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr) 70px 84px 96px 44px; gap: 8px; align-items: end; padding-bottom: 12px; border-bottom: 1px dashed var(--line); }
+.ex-row .mini { font-size: 12px; font-weight: 600; color: var(--muted); }
+.ex-row .rm { padding: 0; width: 44px; }
+.rows { display: grid; gap: 12px; }
+.sessao .progress { height: 12px; border: 1px solid var(--line); border-radius: 999px; background: var(--bg); overflow: hidden; }
+.sessao .progress i { display: block; height: 100%; width: 0; background: var(--accent); transition: width .2s; }
+.prog-txt { font-family: var(--font-mono); font-size: 14px; color: var(--muted); }
+.ex-checks { display: grid; gap: 10px; }
+.ex-item { position: relative; display: flex; gap: 14px; align-items: center; border: 1px solid var(--line); border-radius: 12px; padding: 14px; cursor: pointer; background: var(--surface); min-width: 0; }
+.ex-item input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.ex-item .box { flex: none; width: 28px; height: 28px; border-radius: 8px; border: 2px solid var(--muted); display: grid; place-items: center; }
+.ex-item input:checked + .box { background: var(--accent); border-color: var(--ink); }
+.ex-item input:checked + .box::after { content: ""; width: 12px; height: 7px; border-left: 3px solid var(--accent-ink); border-bottom: 3px solid var(--accent-ink); transform: rotate(-45deg) translate(1px, -1px); }
+.ex-item input:focus-visible + .box { outline: 3px solid var(--ink); outline-offset: 2px; }
+.ex-txt { display: grid; min-width: 0; }
+.ex-txt strong { font-size: 17px; overflow-wrap: anywhere; }
+.ex-txt small { color: var(--muted); font-size: 14px; }
+.ex-item input:checked ~ .ex-txt strong { text-decoration: line-through; color: var(--muted); }
+
+/* semana de treino */
+.sec-t { margin: 0 0 12px; font-size: 26px; }
+.semana { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 8px; margin-bottom: 30px; }
+.dia { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 10px; display: grid; gap: 8px; align-content: start; min-width: 0; }
+.dia.hoje { border-color: var(--ink); box-shadow: 0 0 0 2px var(--accent); }
+.dia-nome { display: flex; justify-content: space-between; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.hoje-tag { background: var(--accent); color: var(--accent-ink); border-radius: 5px; padding: 1px 6px; font-size: 10px; }
+.dia .longo { display: none; }
+.dia-conteudo { display: grid; gap: 6px; min-width: 0; }
+.dia-item { font: inherit; text-align: left; background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 8px; cursor: pointer; display: grid; gap: 2px; min-width: 0; color: var(--ink); }
+.dia-item:hover { border-color: var(--ink); }
+.dia-item b { font-family: var(--font-display); text-transform: uppercase; font-size: 18px; line-height: 1.05; }
+.dia-item span { font-size: 12px; color: var(--muted); overflow-wrap: anywhere; }
+.descanso { font-size: 13px; color: var(--muted); }
+.chips-dias { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip-dia { font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; border: 1px solid var(--line); border-radius: 999px; padding: 2px 10px; background: var(--bg); }
+.chip-dia.hoje { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.grupo { font-size: 12px; color: var(--muted); }
+.dias-sel { border: 0; padding: 0; margin: 0; min-width: 0; }
+.dias-sel legend { font-size: 13px; font-weight: 600; letter-spacing: .02em; padding: 0; margin-bottom: 8px; }
+.dias-sel .opts { display: flex; flex-wrap: wrap; gap: 8px; }
+.dia-op { position: relative; }
+.dia-op input { position: absolute; opacity: 0; inset: 0; width: 100%; height: 100%; margin: 0; cursor: pointer; min-height: 0; }
+.dia-op label { display: inline-flex; align-items: center; justify-content: center; min-width: 54px; min-height: 44px; padding: 0 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); font-weight: 600; font-size: 14px; }
+.dia-op input:checked + label { background: var(--accent); color: var(--accent-ink); border-color: var(--ink); }
+.dia-op input:focus-visible + label { outline: 3px solid var(--ink); outline-offset: 2px; }
+
+/* área em desenvolvimento */
+.obra { max-width: 560px; display: grid; gap: 0; border: 1px solid var(--line); border-radius: 14px; overflow: hidden; background: var(--surface); box-shadow: var(--shadow); }
+.fita { height: 22px; background: repeating-linear-gradient(-45deg, var(--accent) 0 18px, var(--ink) 18px 36px); }
+.obra-corpo { padding: 28px 24px; display: grid; gap: 14px; justify-items: start; }
+.obra-corpo p { color: var(--muted); }
+
+footer { margin-top: 48px; padding-top: 18px; border-top: 1px solid var(--line); display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px 20px; color: var(--muted); font-size: 14px; }
+footer .actions { display: flex; flex-wrap: wrap; gap: 8px; }
+
+#toast { position: fixed; left: 50%; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); transform: translate(-50%, 16px); max-width: calc(100% - 32px); background: var(--ink); color: var(--bg); padding: 12px 18px; border-radius: 12px; font-weight: 500; font-size: 15px; opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s; z-index: 20; }
+#toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+@media (max-width: 820px) {
+  .split { grid-template-columns: minmax(0, 1fr); }
+  .semana { grid-template-columns: minmax(0, 1fr); }
+  .dia { grid-template-columns: 96px minmax(0, 1fr); align-items: start; }
+  .dia .curto { display: none; }
+  .dia .longo { display: inline; }
+  .dia-nome { flex-direction: column; align-items: flex-start; gap: 4px; }
+}
+@media (max-width: 760px) {
+  .ex-row { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) 44px; }
+  .ex-row .f-nome, .ex-row .f-grupo { grid-column: 1 / -1; }
+}
+@media (max-width: 520px) {
+  .grid2 { grid-template-columns: minmax(0, 1fr); }
+  .niveis { grid-template-columns: minmax(0, 1fr); }
+  .brand { font-size: 28px; }
+  .app { padding-block: 14px 32px; }
+  .imc-big strong { font-size: 44px; }
+}
+@media (prefers-reduced-motion: reduce) { #toast, .sessao .progress i { transition: none; } }
+
+/* autenticação BodyPerfect */
+#bp-auth { max-width:520px; margin:7vh auto 32px; padding:28px; background:var(--surface); border:1px solid var(--line); border-radius:18px; box-shadow:var(--shadow); }
+#bp-auth h1 { font-size:clamp(34px,7vw,48px); margin-bottom:8px; }
+#bp-auth .bp-sub { color:var(--muted); margin-bottom:22px; }
+#bp-auth label { display:block; font-weight:600; margin:12px 0 5px; }
+#bp-auth input { width:100%; min-height:44px; border:1px solid var(--line); border-radius:9px; padding:10px 12px; font:inherit; background:var(--bg); color:var(--ink); }
+#bp-auth .bp-actions { display:flex; gap:8px; flex-wrap:wrap; margin-top:18px; }
+#bp-auth button { border:1px solid var(--line); border-radius:999px; padding:10px 16px; font:600 15px var(--font-body); cursor:pointer; background:var(--surface); color:var(--ink); }
+#bp-auth button.primary { background:var(--accent); color:#11151B; border-color:var(--accent); }
+#bp-auth button:disabled { opacity:.55; cursor:wait; }
+#bp-auth .bp-msg { margin-top:14px; padding:10px 12px; border-radius:9px; background:var(--accent-soft); white-space:pre-wrap; }
+#bp-auth .bp-note { color:var(--muted); font-size:13px; margin-top:18px; }
+#bp-student { display:none; max-width:900px; margin:7vh auto; padding:24px; background:var(--surface); border:1px solid var(--line); border-radius:18px; }
+#bp-student h1 { font-size:clamp(34px,7vw,48px); margin-bottom:8px; }
+#bp-student .bp-workout { border:1px solid var(--line); border-radius:12px; padding:14px; margin:12px 0; }
+#bp-student button { border:1px solid var(--line); border-radius:999px; padding:10px 16px; font:600 15px var(--font-body); cursor:pointer; background:var(--surface); color:var(--ink); }
+#bp-student .bp-days { color:var(--muted); font-size:14px; }
+body.bp-admin .app { display:block; }
+body.bp-admin #bp-auth, body.bp-admin #bp-student { display:none !important; }
+body.bp-student #bp-student { display:block; }
+body.bp-student .app, body.bp-student #bp-auth { display:none !important; }
+@media(max-width:600px){#bp-auth,#bp-student{margin:18px auto;padding:20px}}
+
+</style>
+
+
+<section id="bp-auth" aria-live="polite">
+  <h1>BodyPerfect</h1>
+  <p class="bp-sub">Entre na sua conta ou crie seu acesso gratuito.</p>
+  <form id="bp-auth-form">
+    <div id="bp-name-wrap"><label for="bp-name">Seu nome</label><input id="bp-name" name="name" autocomplete="name" required maxlength="100" placeholder="Nome completo"></div>
+    <label for="bp-email">E-mail</label><input id="bp-email" name="email" type="email" autocomplete="email" required placeholder="voce@email.com">
+    <label for="bp-password">Senha</label><input id="bp-password" name="password" type="password" autocomplete="current-password" required minlength="8" placeholder="Mínimo de 8 caracteres">
+    <div class="bp-actions"><button class="primary" id="bp-signup" type="button">Criar conta de aluno</button><button id="bp-login" type="submit">Entrar</button></div>
+  </form>
+  <div id="bp-auth-msg" class="bp-msg" hidden></div>
+  <p class="bp-note">Ao criar uma conta, seu perfil será registrado como aluno. O acesso administrativo é liberado separadamente pelo responsável pelo sistema.</p>
+</section>
+<section id="bp-student" aria-live="polite">
+  <div style="display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap"><div><h1>Minha área</h1><p id="bp-student-welcome" class="bp-sub"></p></div><button id="bp-logout-student" type="button">Sair</button></div>
+  <h2>Meus treinos</h2><div id="bp-student-workouts"><p>Carregando seus treinos...</p></div>
+  <p class="bp-note">Seus dados e treinos são privados e vinculados à sua conta.</p>
+</section>
+
+<div class="app">
+  <header class="top">
+    <a class="brand" href="#alunos" aria-label="BodyPerfect, ir para os alunos">
+      <svg viewBox="0 0 36 36" aria-hidden="true"><rect width="36" height="36" rx="9" fill="#FF5A1F"/><path d="M9 15v6M13 11.5v13M23 11.5v13M27 15v6M13 18h10" fill="none" stroke="#11151B" stroke-width="2.8" stroke-linecap="round"/></svg>
+      <span>BodyPerfect<small>SISTEMA PARA ACADEMIA</small></span>
+    </a>
+    <nav class="nav" id="nav" aria-label="Seções"></nav>
+  </header>
+  <div class="banner" id="banner" hidden>
+    <span>Você está vendo alunos e treinos de exemplo. Cadastre os seus ou comece do zero.</span>
+    <button class="btn small js-limpar" type="button" data-label="Começar do zero">Começar do zero</button>
+  </div>
+  <main id="view"></main>
+  <footer>
+    <span>Os dados ficam salvos só neste navegador.</span>
+    <div class="actions">
+      <button class="btn small" type="button" id="btn-exemplos">Restaurar exemplos</button>
+      <button class="btn small js-limpar" type="button" data-label="Apagar tudo">Apagar tudo</button>
+    </div>
+  </footer>
+</div>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ---------- utilidades ---------- */
+  var KEY = 'bodyperfect.v2';
+  var f2 = new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  var fN = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 2 });
+  var esc = function (s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  };
+  var $ = function (sel, root) { return (root || document).querySelector(sel); };
+  var $$ = function (sel, root) { return Array.prototype.slice.call((root || document).querySelectorAll(sel)); };
+  var seq = 0;
+  var newId = function (p) { return p + '_' + Date.now().toString(36) + (seq++).toString(36); };
+  var parseNum = function (v) { return parseFloat(String(v).replace(',', '.')); };
+
+  /* ---------- regras (as mesmas do projeto em Java) ---------- */
+  var NIVEIS = {
+    1: { nome: 'Iniciante', txt: 'Iniciante: full body 3x por semana, 20 min de caminhada' },
+    2: { nome: 'Intermediário', txt: 'Intermediário: divisão A/B/C, 4x por semana, 30 min de cardio' },
+    3: { nome: 'Avançado', txt: 'Avançado: divisão por grupo muscular, 5x por semana, cardio intervalado' }
+  };
+  function imcOf(a) { return a.peso / (a.altura * a.altura); }
+  function classif(imc) {
+    if (imc < 18.5) return { k: 'baixo', t: 'Abaixo do peso' };
+    if (imc < 25) return { k: 'normal', t: 'Peso normal' };
+    if (imc < 30) return { k: 'sobre', t: 'Sobrepeso' };
+    return { k: 'obeso', t: 'Obesidade' };
+  }
+
+  /* dias da semana, grupos musculares e modelos de treino de cada nível: [exercício, grupo, séries, repetições] */
+  var DIAS = [['Seg', 'Segunda'], ['Ter', 'Terça'], ['Qua', 'Quarta'], ['Qui', 'Quinta'], ['Sex', 'Sexta'], ['Sáb', 'Sábado'], ['Dom', 'Domingo']];
+  var GRUPOS = ['Peito', 'Costas', 'Pernas', 'Ombros', 'Bíceps', 'Tríceps', 'Abdômen', 'Corpo todo', 'Cardio'];
+  function hojeIdx() { return (new Date().getDay() + 6) % 7; }
+  function gruposUnicos(exs) {
+    var out = [];
+    exs.forEach(function (e) { if (e.grupo && out.indexOf(e.grupo) < 0) out.push(e.grupo); });
+    return out;
+  }
+  function diasTxt(t) {
+    return t.dias.slice().sort(function (x, y) { return x - y; }).map(function (i) { return DIAS[i][1]; }).join(', ');
+  }
+  var MODELOS = {
+    1: [
+      { nome: 'Treino A', foco: 'Corpo todo', dias: [0, 2, 4], ex: [['Agachamento livre', 'Pernas', 3, '12'], ['Supino na máquina', 'Peito', 3, '12'], ['Remada baixa', 'Costas', 3, '12'], ['Desenvolvimento com halteres', 'Ombros', 3, '12'], ['Prancha', 'Abdômen', 3, '30s']] }
+    ],
+    2: [
+      { nome: 'Treino A', foco: 'Peito e tríceps', dias: [0, 4], ex: [['Supino reto', 'Peito', 4, '10'], ['Supino inclinado com halteres', 'Peito', 3, '12'], ['Crucifixo na máquina', 'Peito', 3, '12'], ['Tríceps pulley', 'Tríceps', 3, '12'], ['Tríceps testa', 'Tríceps', 3, '12']] },
+      { nome: 'Treino B', foco: 'Costas e bíceps', dias: [1], ex: [['Puxada frontal', 'Costas', 4, '10'], ['Remada curvada', 'Costas', 3, '10'], ['Remada baixa', 'Costas', 3, '12'], ['Rosca direta', 'Bíceps', 3, '12'], ['Rosca martelo', 'Bíceps', 3, '12']] },
+      { nome: 'Treino C', foco: 'Pernas e ombros', dias: [3], ex: [['Agachamento livre', 'Pernas', 4, '10'], ['Leg press', 'Pernas', 3, '12'], ['Cadeira extensora', 'Pernas', 3, '12'], ['Desenvolvimento militar', 'Ombros', 3, '10'], ['Elevação lateral', 'Ombros', 3, '12']] }
+    ],
+    3: [
+      { nome: 'Treino A', foco: 'Peito', dias: [0], ex: [['Supino reto', 'Peito', 4, '8'], ['Supino inclinado', 'Peito', 4, '10'], ['Crucifixo', 'Peito', 3, '12'], ['Crossover', 'Peito', 3, '15']] },
+      { nome: 'Treino B', foco: 'Costas', dias: [1], ex: [['Barra fixa', 'Costas', 4, '8'], ['Remada curvada', 'Costas', 4, '8'], ['Puxada frontal', 'Costas', 3, '10'], ['Pullover', 'Costas', 3, '12']] },
+      { nome: 'Treino C', foco: 'Pernas', dias: [2], ex: [['Agachamento livre', 'Pernas', 5, '6'], ['Leg press', 'Pernas', 4, '10'], ['Stiff', 'Pernas', 4, '10'], ['Cadeira flexora', 'Pernas', 3, '12'], ['Panturrilha em pé', 'Pernas', 4, '15']] },
+      { nome: 'Treino D', foco: 'Ombros', dias: [3], ex: [['Desenvolvimento militar', 'Ombros', 4, '8'], ['Elevação lateral', 'Ombros', 4, '12'], ['Elevação frontal', 'Ombros', 3, '12'], ['Encolhimento', 'Ombros', 3, '12']] },
+      { nome: 'Treino E', foco: 'Braços', dias: [4], ex: [['Rosca direta', 'Bíceps', 4, '8'], ['Rosca martelo', 'Bíceps', 3, '10'], ['Tríceps testa', 'Tríceps', 4, '8'], ['Tríceps corda', 'Tríceps', 3, '12']] }
+    ]
+  };
+  function gerarModelo(nivel) {
+    return (MODELOS[nivel] || MODELOS[1]).map(function (m) {
+      return {
+        id: newId('t'), nome: m.nome, foco: m.foco, dias: m.dias.slice(),
+        exercicios: m.ex.map(function (e) { return { nome: e[0], grupo: e[1], series: e[2], reps: e[3], carga: '' }; })
+      };
+    });
+  }
+
+  /* ---------- dados ---------- */
+  function seed() {
+    var base = [['Ana Souza', 24, 62, 1.68, 1], ['Bruno Lima', 31, 88, 1.75, 2], ['Carla Mendes', 28, 50, 1.72, 1], ['Diego Rocha', 40, 105, 1.78, 3]];
+    var alunos = base.map(function (b, i) {
+      return { matricula: i + 1, nome: b[0], idade: b[1], peso: b[2], altura: b[3], nivel: b[4], treinos: gerarModelo(b[4]), historico: [] };
+    });
+    var t0 = alunos[0].treinos[0];
+    alunos[0].historico.push({ treinoId: t0.id, nome: t0.nome, data: new Date(Date.now() - 86400000).toISOString() });
+    return { demo: true, proxima: 5, alunos: alunos, profissionais: [] };
+  }
+  function load() {
+    try {
+      var raw = localStorage.getItem(KEY);
+      if (raw) {
+        var s = JSON.parse(raw);
+        if (s && Array.isArray(s.alunos) && typeof s.proxima === 'number') {
+          s.profissionais = Array.isArray(s.profissionais) ? s.profissionais : [];
+          var velho = false;
+          s.alunos.forEach(function (a) {
+            a.treinos = a.treinos || []; a.historico = a.historico || [];
+            a.treinos.forEach(function (t) {
+              if (!Array.isArray(t.dias)) { t.dias = []; velho = true; }
+              t.exercicios.forEach(function (e) { if (typeof e.grupo !== 'string') e.grupo = ''; });
+            });
+          });
+          if (velho && s.demo) return seed();
+          return s;
+        }
+      }
+    } catch (e) { /* sem armazenamento: segue em memória */ }
+    return { demo: false, proxima: 1, alunos: [], profissionais: [] };
+  }
+  var state = load();
+  function save() { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) { /* ignora */ } }
+  function findAluno(m) { return state.alunos.find(function (a) { return a.matricula === m; }) || null; }
+  function fmtData(iso) { return new Date(iso).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }); }
+
+  function toast(msg) {
+    var t = $('#toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(toast.timer);
+    toast.timer = setTimeout(function () { t.classList.remove('show'); }, 2800);
+  }
+
+  /* ---------- peças de interface ---------- */
+  function badge(c) { return '<span class="badge k-' + c.k + '">' + c.t + '</span>'; }
+  function gauge(imc, compact) {
+    var MIN = 15, MAX = 40, span = MAX - MIN;
+    var pos = Math.min(100, Math.max(0, (imc - MIN) / span * 100));
+    var seg = [['baixo', 18.5 - MIN], ['normal', 25 - 18.5], ['sobre', 30 - 25], ['obeso', MAX - 30]];
+    var ticks = [[0, '15', 'translateX(0)'], [(18.5 - MIN) / span * 100, '18,5'], [(25 - MIN) / span * 100, '25'], [(30 - MIN) / span * 100, '30'], [100, '40', 'translateX(-100%)']];
+    return '<div class="gauge' + (compact ? ' compact' : '') + '" role="img" aria-label="IMC ' + f2.format(imc) + ' na escala de 15 a 40">' +
+      '<div class="bar">' + seg.map(function (s) { return '<i class="s-' + s[0] + '" style="flex:' + s[1] + ' 1 0"></i>'; }).join('') + '</div>' +
+      '<div class="mk" style="left:' + pos + '%"></div>' +
+      (compact ? '' : ticks.map(function (t) { return '<span class="tk" style="left:' + t[0] + '%' + (t[2] ? ';transform:' + t[2] : '') + '">' + t[1] + '</span>'; }).join('')) +
+      '</div>';
+  }
+  function treinoIndicado(nivel) {
+    var n = NIVEIS[nivel] || NIVEIS[1];
+    var plano = n.txt.slice(n.txt.indexOf(': ') + 2);
+    return '<p class="treino-txt"><span class="nv">' + n.nome + '</span>' + esc(plano.charAt(0).toUpperCase() + plano.slice(1)) + '</p>';
+  }
+  function head(title, text) { return '<div class="page-head"><h1>' + title + '</h1>' + (text ? '<p>' + text + '</p>' : '') + '</div>'; }
+  function emptyAlunos() {
+    return '<div class="empty"><p>Nenhum aluno cadastrado.</p><a class="btn primary" href="#cadastrar">Cadastrar aluno</a></div>';
+  }
+
+  /* ---------- rotas ---------- */
+  var ROUTES = [['alunos', 'Alunos'], ['cadastrar', 'Cadastrar'], ['buscar', 'Buscar'], ['treinos', 'Treinos'], ['profissionais', 'Profissionais'], ['assinaturas', 'Assinaturas', 1], ['cartoes', 'Cartões', 1]];
+  var view = $('#view');
+  var views = {};
+  var alunoSel = null;           /* aluno aberto em Treinos */
+  var modo = { t: 'lista' };     /* lista | form | sessao */
+  var buscaAtual = null;         /* matrícula aberta em Buscar */
+
+  function currentRoute() {
+    var h = location.hash.replace('#', '');
+    return ROUTES.some(function (r) { return r[0] === h; }) ? h : 'alunos';
+  }
+  function render() {
+    var r = currentRoute();
+    $('#nav').innerHTML = ROUTES.map(function (x) {
+      return '<a href="#' + x[0] + '"' + (x[0] === r ? ' aria-current="page"' : '') + '>' + x[1] + (x[2] ? ' <span class="soon">breve</span>' : '') + '</a>';
+    }).join('');
+    $('#banner').hidden = !state.demo;
+    views[r]();
+  }
+  window.addEventListener('hashchange', function () { render(); window.scrollTo(0, 0); });
+  function irPara(hash) { if (location.hash === hash) { render(); } else { location.hash = hash; } }
+
+  /* ---------- Alunos ---------- */
+  function cardAluno(a) {
+    var imc = imcOf(a), c = classif(imc);
+    return '<article class="aluno">' +
+      '<div class="aluno-top"><span class="mat">Matrícula ' + a.matricula + '</span>' + badge(c) + '</div>' +
+      '<h3>' + esc(a.nome) + '</h3>' +
+      '<div class="imc-line"><strong>' + f2.format(imc) + '</strong><span>IMC</span></div>' +
+      gauge(imc, true) +
+      treinoIndicado(a.nivel) +
+      '<div class="card-acoes"><button class="btn small" type="button" data-ficha="' + a.matricula + '">Ver ficha</button>' +
+      '<button class="btn small primary" type="button" data-treinos="' + a.matricula + '">Treinos</button></div>' +
+      '</article>';
+  }
+  views.alunos = function () {
+    view.innerHTML = head('Alunos', 'Todos os alunos cadastrados, com IMC, classificação e o treino indicado para o nível.') +
+      (state.alunos.length ? '<p class="count" style="margin-bottom:16px">' + state.alunos.length + (state.alunos.length === 1 ? ' aluno cadastrado' : ' alunos cadastrados') + '</p>' : '') +
+      '<div class="cards">' + (state.alunos.length ? state.alunos.map(cardAluno).join('') : emptyAlunos()) + '</div>';
+  };
+
+  /* ---------- Cadastrar ---------- */
+  views.cadastrar = function () {
+    view.innerHTML = head('Cadastrar aluno', 'O IMC é calculado na hora: peso dividido pela altura ao quadrado.') +
+      '<div class="split">' +
+        '<form class="panel" id="f-aluno" novalidate>' +
+          '<div class="grid2">' +
+            '<div class="field span2"><label for="al-nome">Nome</label><input id="al-nome" type="text" autocomplete="off" placeholder="Ex.: Ana Souza"></div>' +
+            '<div class="field"><label for="al-idade">Idade</label><input id="al-idade" type="number" min="1" max="120" step="1" inputmode="numeric" placeholder="25"></div>' +
+            '<div class="field"><label for="al-peso">Peso (kg)</label><input id="al-peso" type="text" inputmode="decimal" autocomplete="off" placeholder="70,5"></div>' +
+            '<div class="field span2"><label for="al-altura">Altura (m)</label><input id="al-altura" type="text" inputmode="decimal" autocomplete="off" placeholder="1,75"><span class="hint">Em metros, por exemplo 1,75.</span></div>' +
+          '</div>' +
+          '<fieldset class="niveis"><legend>Nível de treino</legend>' +
+            [1, 2, 3].map(function (n) {
+              var plano = NIVEIS[n].txt.slice(NIVEIS[n].txt.indexOf(': ') + 2);
+              return '<div class="nivel"><input type="radio" name="nivel" id="nv-' + n + '" value="' + n + '"' + (n === 1 ? ' checked' : '') + '><label for="nv-' + n + '"><b>' + NIVEIS[n].nome + '</b><span>' + esc(plano) + '</span></label></div>';
+            }).join('') +
+          '</fieldset>' +
+          '<label class="check" for="al-modelo"><input type="checkbox" id="al-modelo" checked><span>Já criar os treinos padrão do nível (você pode editar depois).</span></label>' +
+          '<div class="error" id="erro-aluno" role="alert" hidden></div>' +
+          '<div><button class="btn primary" type="submit">Cadastrar aluno</button></div>' +
+        '</form>' +
+        '<aside class="receipt" id="previa" aria-label="Prévia do IMC"></aside>' +
+      '</div>';
+
+    function read() {
+      var sel = $('input[name="nivel"]:checked');
+      return { nome: $('#al-nome').value.trim(), idade: parseInt($('#al-idade').value, 10), peso: parseNum($('#al-peso').value), altura: parseNum($('#al-altura').value), nivel: sel ? parseInt(sel.value, 10) : 1 };
+    }
+    function previa() {
+      var d = read(), box = $('#previa');
+      if (!(d.peso > 0 && d.altura > 0)) {
+        box.innerHTML = '<h2>Prévia</h2><p class="note">Informe peso e altura para ver o IMC e o treino indicado.</p>';
+        return;
+      }
+      var imc = imcOf(d), c = classif(imc);
+      box.innerHTML = '<h2>Prévia</h2>' +
+        '<div class="imc-big"><strong>' + f2.format(imc) + '</strong><span class="lbl">IMC</span></div>' + badge(c) + gauge(imc) +
+        '<div class="bloco"><h3>Treino indicado</h3>' + treinoIndicado(d.nivel) + '</div>';
+    }
+    previa();
+    $('#f-aluno').addEventListener('input', previa);
+    $('#f-aluno').addEventListener('change', previa);
+    $('#f-aluno').addEventListener('submit', function (e) {
+      e.preventDefault();
+      var d = read(), err = $('#erro-aluno'), msg = '';
+      if (!d.nome) msg = 'Informe o nome do aluno.';
+      else if (!(d.idade >= 1 && d.idade <= 120)) msg = 'Informe uma idade entre 1 e 120 anos.';
+      else if (!(d.peso >= 20 && d.peso <= 400)) msg = 'Informe o peso em quilos, por exemplo 70,5.';
+      else if (!(d.altura >= 0.5 && d.altura <= 2.5)) msg = 'Informe a altura em metros, por exemplo 1,75.';
+      if (msg) { err.textContent = msg; err.hidden = false; return; }
+      var a = { matricula: state.proxima, nome: d.nome, idade: d.idade, peso: d.peso, altura: d.altura, nivel: d.nivel, treinos: $('#al-modelo').checked ? gerarModelo(d.nivel) : [], historico: [] };
+      state.proxima += 1;
+      state.alunos.push(a);
+      save();
+      buscaAtual = a.matricula;
+      toast('Aluno cadastrado. Matrícula: ' + a.matricula);
+      location.hash = '#buscar';
+    });
+  };
+
+  /* ---------- Buscar / ficha ---------- */
+  function fichaHtml(a) {
+    var imc = imcOf(a), c = classif(imc);
+    var feitos = a.historico.length;
+    return '<article class="panel ficha">' +
+      '<div class="ficha-head"><div><span class="mat">Matrícula ' + a.matricula + '</span><h2>' + esc(a.nome) + '</h2>' +
+        '<p class="sub">' + a.idade + ' anos · ' + fN.format(a.peso) + ' kg · ' + fN.format(a.altura) + ' m</p></div>' + badge(c) + '</div>' +
+      '<div class="imc-big"><strong>' + f2.format(imc) + '</strong><span class="lbl">IMC</span></div>' + gauge(imc) +
+      '<div class="bloco"><h3>Treino indicado</h3>' + treinoIndicado(a.nivel) + '</div>' +
+      '<div class="resumo-linha"><span>' + a.treinos.length + (a.treinos.length === 1 ? ' treino montado' : ' treinos montados') + ' · ' + feitos + (feitos === 1 ? ' concluído' : ' concluídos') + '</span>' +
+        '<button class="btn small primary" type="button" data-treinos="' + a.matricula + '">Abrir treinos</button></div>' +
+      '<form class="peso-form" data-matricula="' + a.matricula + '" novalidate><div class="field"><label for="ficha-peso">Atualizar peso (kg)</label>' +
+        '<div class="inline"><input id="ficha-peso" type="text" inputmode="decimal" autocomplete="off" placeholder="' + fN.format(a.peso) + '"><button class="btn" type="submit">Salvar peso</button></div></div></form>' +
+      '</article>';
+  }
+  function drawBusca() {
+    var box = $('#resultado');
+    if (buscaAtual === null) { box.innerHTML = ''; return; }
+    var a = findAluno(buscaAtual);
+    box.innerHTML = a ? fichaHtml(a) : '<div class="error" role="alert">Matrícula não encontrada.</div>';
+  }
+  views.buscar = function () {
+    view.innerHTML = head('Buscar por matrícula', 'Digite o número da matrícula para abrir a ficha completa do aluno.') +
+      '<form class="busca" id="f-busca" novalidate><div class="field"><label for="b-mat">Matrícula</label><input id="b-mat" type="number" min="1" step="1" inputmode="numeric" placeholder="Ex.: 1"></div>' +
+      '<button class="btn primary" type="submit">Buscar</button></form>' +
+      '<div class="resultado" id="resultado"></div>';
+    if (buscaAtual !== null) $('#b-mat').value = buscaAtual;
+    drawBusca();
+    $('#f-busca').addEventListener('submit', function (e) {
+      e.preventDefault();
+      var n = parseInt($('#b-mat').value, 10);
+      buscaAtual = isNaN(n) ? null : n;
+      if (buscaAtual === null) { toast('Digite o número da matrícula.'); return; }
+      drawBusca();
+    });
+  };
+
+  /* ---------- Treinos ---------- */
+  function letra(nome) {
+    var m = /treino\s+(\S)/i.exec(nome);
+    return (m ? m[1] : nome.charAt(0) || '?').toUpperCase();
+  }
+  function cardTreino(t, a) {
+    var series = t.exercicios.reduce(function (s, e) { return s + e.series; }, 0);
+    var feitos = a.historico.filter(function (h) { return h.treinoId === t.id; });
+    var ult = feitos.length ? 'Último treino: ' + fmtData(feitos[feitos.length - 1].data) : 'Ainda não feito';
+    var grupos = gruposUnicos(t.exercicios), hoje = hojeIdx();
+    var dias = t.dias.slice().sort(function (x, y) { return x - y; }).map(function (i) {
+      return '<span class="chip-dia' + (i === hoje ? ' hoje' : '') + '">' + DIAS[i][0] + '</span>';
+    }).join('');
+    var lista = t.exercicios.slice(0, 4).map(function (e) {
+      return '<li><span>' + esc(e.nome) + (e.grupo ? '<small class="grupo"> · ' + esc(e.grupo) + '</small>' : '') + '</span><span class="num">' + e.series + '×' + esc(e.reps) + '</span></li>';
+    }).join('') + (t.exercicios.length > 4 ? '<li class="mais"><span>+ ' + (t.exercicios.length - 4) + (t.exercicios.length - 4 === 1 ? ' exercício' : ' exercícios') + '</span></li>' : '');
+    return '<article class="treino-card">' +
+      '<div class="tc-head"><span class="letra" aria-hidden="true">' + esc(letra(t.nome)) + '</span><div><h3>' + esc(t.nome) + '</h3><p class="foco">' + esc(t.foco || 'Sem foco definido') + '</p></div></div>' +
+      '<div class="chips-dias">' + (dias || '<span class="descanso">Sem dia definido</span>') + '</div>' +
+      (grupos.length ? '<p class="meta-t"><b>Trabalha:</b> ' + esc(grupos.join(', ')) + '</p>' : '') +
+      '<ul class="ex-lista">' + lista + '</ul>' +
+      '<p class="meta-t">' + t.exercicios.length + (t.exercicios.length === 1 ? ' exercício' : ' exercícios') + ' · ' + series + ' séries · ' + ult + '</p>' +
+      '<div class="tc-acoes"><button class="btn primary small" type="button" data-iniciar="' + t.id + '">Iniciar treino</button>' +
+      '<button class="btn small" type="button" data-editar="' + t.id + '">Editar</button>' +
+      '<button class="btn small danger" type="button" data-excluir="' + t.id + '" data-label="Excluir">Excluir</button></div>' +
+      '</article>';
+  }
+  function semanaHtml(a) {
+    var hoje = hojeIdx();
+    return '<h2 class="sec-t">Semana de treino</h2><p class="count" style="margin-bottom:12px">Cada treino aparece no dia selecionado, com o foco muscular definido no cadastro. Ex.: segunda — pernas; terça — braços.</p><div class="semana">' + DIAS.map(function (d, i) {
+      var ts = a.treinos.filter(function (t) { return t.dias.indexOf(i) >= 0; });
+      var cont = ts.length ? ts.map(function (t) {
+        return '<button type="button" class="dia-item" data-iniciar="' + t.id + '"><b>' + esc(t.nome) + '</b><span>' + esc(t.foco || gruposUnicos(t.exercicios).join(', ') || 'Sem foco') + '</span></button>';
+      }).join('') : '<span class="descanso">Descanso</span>';
+      return '<div class="dia' + (i === hoje ? ' hoje' : '') + '"><div class="dia-nome"><span><span class="curto">' + d[0] + '</span><span class="longo">' + d[1] + '</span></span>' +
+        (i === hoje ? '<span class="hoje-tag">Hoje</span>' : '') + '</div><div class="dia-conteudo">' + cont + '</div></div>';
+    }).join('') + '</div>';
+  }
+  function drawTreinos() {
+    var a = findAluno(alunoSel);
+    if (modo.t === 'sessao') return drawSessao(a);
+    if (modo.t === 'form') return drawForm(a);
+    var opts = state.alunos.map(function (x) {
+      return '<option value="' + x.matricula + '"' + (x.matricula === alunoSel ? ' selected' : '') + '>' + esc(x.nome) + ' (matrícula ' + x.matricula + ')</option>';
+    }).join('');
+    view.innerHTML = head('Treinos', 'Monte os treinos de cada aluno, defina os dias da semana e acompanhe a execução exercício por exercício.') +
+      '<div class="toolbar"><div class="field"><label for="t-aluno">Treinos de</label><select id="t-aluno">' + opts + '</select></div>' +
+      '<div class="acoes"><button class="btn" type="button" data-modelo>Adicionar modelo do nível</button><button class="btn primary" type="button" data-novo>Novo treino</button></div></div>' +
+      '<div style="margin-bottom:20px"><span class="mat">Nível de ' + esc(a.nome) + '</span>' + treinoIndicado(a.nivel) + '</div>' +
+      semanaHtml(a) + '<h2 class="sec-t">Treinos montados</h2>' +
+      '<div class="cards">' + (a.treinos.length ? a.treinos.map(function (t) { return cardTreino(t, a); }).join('') :
+        '<div class="empty"><p>' + esc(a.nome) + ' ainda não tem treinos.</p><div class="acoes"><button class="btn primary" type="button" data-modelo>Adicionar modelo do nível</button><button class="btn" type="button" data-novo>Criar do zero</button></div></div>') + '</div>';
+    $('#t-aluno').addEventListener('change', function (e) { alunoSel = parseInt(e.target.value, 10); drawTreinos(); });
+  }
+  views.treinos = function () {
+    modo = { t: 'lista' };
+    if (!state.alunos.length) {
+      view.innerHTML = head('Treinos', 'Monte os treinos de cada aluno, defina os dias da semana e acompanhe a execução exercício por exercício.') + '<div class="cards">' + emptyAlunos() + '</div>';
+      return;
+    }
+    if (alunoSel === null || !findAluno(alunoSel)) alunoSel = state.alunos[0].matricula;
+    drawTreinos();
+  };
+
+  /* formulário de treino */
+  function rowHtml(e) {
+    e = e || { nome: '', grupo: '', series: 3, reps: '12', carga: '' };
+    var id = newId('r');
+    var opts = '<option value="">Escolha</option>' + GRUPOS.map(function (g) { return '<option value="' + g + '"' + (e.grupo === g ? ' selected' : '') + '>' + g + '</option>'; }).join('');
+    return '<div class="ex-row" data-row>' +
+      '<div class="field f-nome"><label class="mini" for="' + id + 'n">Exercício</label><input id="' + id + 'n" class="in-nome" type="text" autocomplete="off" placeholder="Ex.: Supino reto" value="' + esc(e.nome) + '"></div>' +
+      '<div class="field f-grupo"><label class="mini" for="' + id + 'g">Grupo muscular</label><select id="' + id + 'g" class="in-grupo">' + opts + '</select></div>' +
+      '<div class="field"><label class="mini" for="' + id + 's">Séries</label><input id="' + id + 's" class="in-series" type="number" min="1" max="20" step="1" inputmode="numeric" value="' + e.series + '"></div>' +
+      '<div class="field"><label class="mini" for="' + id + 'r">Reps</label><input id="' + id + 'r" class="in-reps" type="text" autocomplete="off" value="' + esc(e.reps) + '"></div>' +
+      '<div class="field"><label class="mini" for="' + id + 'c">Carga (kg)</label><input id="' + id + 'c" class="in-carga" type="text" inputmode="decimal" autocomplete="off" placeholder="kg" value="' + esc(e.carga) + '"></div>' +
+      '<button class="btn small rm" type="button" data-rm aria-label="Remover exercício">✕</button></div>';
+  }
+  function drawForm(a) {
+    var t = modo.id ? a.treinos.find(function (x) { return x.id === modo.id; }) : null;
+    var rows = (t ? t.exercicios : [null, null, null]).map(rowHtml).join('');
+    var dias = t ? t.dias : [];
+    view.innerHTML = head(t ? 'Editar treino' : 'Novo treino', 'Treino de ' + esc(a.nome) + '. Escolha os dias da semana e, em cada exercício, o grupo muscular, as séries, as repetições e a carga.') +
+      '<form class="panel" id="f-treino" novalidate style="max-width:900px">' +
+        '<div class="grid2">' +
+          '<div class="field"><label for="tr-nome">Nome do treino</label><input id="tr-nome" type="text" autocomplete="off" placeholder="Treino A" value="' + esc(t ? t.nome : 'Treino ' + String.fromCharCode(65 + a.treinos.length % 26)) + '"></div>' +
+          '<div class="field"><label for="tr-foco">O que vai ser treinado</label><input id="tr-foco" type="text" autocomplete="off" placeholder="Peito e tríceps" value="' + esc(t ? t.foco : '') + '"><span class="hint">Em branco, usamos os grupos musculares dos exercícios.</span></div>' +
+        '</div>' +
+        '<fieldset class="dias-sel"><legend>Dias da semana</legend><div class="opts">' +
+          DIAS.map(function (d, i) {
+            return '<div class="dia-op"><input type="checkbox" name="dia" id="dia-' + i + '" value="' + i + '"' + (dias.indexOf(i) >= 0 ? ' checked' : '') + '><label for="dia-' + i + '">' + d[0] + '</label></div>';
+          }).join('') + '</div></fieldset>' +
+        '<div class="rows" id="rows">' + rows + '</div>' +
+        '<div><button class="btn" type="button" data-add-ex>+ Adicionar exercício</button></div>' +
+        '<div class="error" id="erro-treino" role="alert" hidden></div>' +
+        '<div class="acoes"><button class="btn primary" type="submit">Salvar treino</button><button class="btn" type="button" data-voltar>Cancelar</button></div>' +
+      '</form>';
+    $('#f-treino').addEventListener('submit', function (e) {
+      e.preventDefault();
+      var nome = $('#tr-nome').value.trim(), foco = $('#tr-foco').value.trim(), err = $('#erro-treino'), msg = '';
+      var exs = [];
+      $$('[data-row]').forEach(function (r) {
+        var n = $('.in-nome', r).value.trim();
+        if (!n) return;
+        exs.push({ nome: n, grupo: $('.in-grupo', r).value, series: parseInt($('.in-series', r).value, 10), reps: $('.in-reps', r).value.trim(), carga: $('.in-carga', r).value.trim() });
+      });
+      var diasSel = $$('input[name="dia"]:checked').map(function (i) { return parseInt(i.value, 10); });
+      if (!nome) msg = 'Dê um nome ao treino.';
+      else if (!exs.length) msg = 'Adicione pelo menos um exercício com nome.';
+      else if (exs.some(function (x) { return !(x.series >= 1 && x.series <= 20); })) msg = 'As séries devem ficar entre 1 e 20.';
+      else if (exs.some(function (x) { return !x.reps; })) msg = 'Informe as repetições de cada exercício.';
+      else if (exs.some(function (x) { return x.carga && !(parseNum(x.carga) >= 0); })) msg = 'A carga deve ser um número em quilos.';
+      if (msg) { err.textContent = msg; err.hidden = false; return; }
+      if (!foco) foco = gruposUnicos(exs).join(', ');
+      if (t) { t.nome = nome; t.foco = foco; t.dias = diasSel; t.exercicios = exs; }
+      else { a.treinos.push({ id: newId('t'), nome: nome, foco: foco, dias: diasSel, exercicios: exs }); }
+      save();
+      modo = { t: 'lista' };
+      drawTreinos();
+      toast('Treino salvo.');
+    });
+  }
+
+  /* execução do treino */
+  function drawSessao(a) {
+    var t = a.treinos.find(function (x) { return x.id === modo.id; });
+    if (!t) { modo = { t: 'lista' }; return drawTreinos(); }
+    view.innerHTML = '<div class="page-head"><button class="btn small" type="button" data-voltar>← Voltar</button><h1>' + esc(t.nome) + '</h1><p>' + esc(t.foco || 'Sem foco definido') + ' · ' + esc(a.nome) + (t.dias.length ? ' · ' + diasTxt(t) : '') + '</p></div>' +
+      '<div class="panel sessao" style="max-width:720px">' +
+        '<div><div class="prog-txt" id="prog-txt"></div></div>' +
+        '<div class="progress" aria-hidden="true"><i id="prog-bar"></i></div>' +
+        '<div class="ex-checks">' + t.exercicios.map(function (e, i) {
+          return '<label class="ex-item"><input type="checkbox" data-ex="' + i + '"><span class="box" aria-hidden="true"></span><span class="ex-txt"><strong>' + esc(e.nome) + '</strong><small>' +
+            (e.grupo ? esc(e.grupo) + ' · ' : '') + e.series + ' séries × ' + esc(e.reps) + ' repetições' + (e.carga ? ' · ' + esc(e.carga) + ' kg' : '') + '</small></span></label>';
+        }).join('') + '</div>' +
+        '<div><button class="btn primary" type="button" data-finalizar>Finalizar treino</button></div>' +
+      '</div>';
+    atualizaProgresso();
+  }
+  function atualizaProgresso() {
+    var boxes = $$('[data-ex]'), feitos = boxes.filter(function (b) { return b.checked; }).length;
+    var txt = $('#prog-txt'), bar = $('#prog-bar');
+    if (!txt || !bar) return;
+    txt.textContent = feitos + ' de ' + boxes.length + (boxes.length === 1 ? ' exercício' : ' exercícios');
+    bar.style.width = (boxes.length ? feitos / boxes.length * 100 : 0) + '%';
+  }
+
+  /* ---------- Profissionais ---------- */
+  views.profissionais = function () {
+    var pessoas = state.profissionais || [];
+    view.innerHTML = head('Profissionais', 'Cadastre e consulte os profissionais que atendem na academia: personal trainers e nutricionistas.') +
+      '<div class="split">' +
+        '<form class="panel" id="f-profissional" novalidate>' +
+          '<h2>Novo cadastro</h2>' +
+          '<div class="field"><label for="pr-tipo">Tipo de profissional</label><select id="pr-tipo"><option value="Personal trainer">Personal trainer</option><option value="Nutricionista">Nutricionista</option></select></div>' +
+          '<div class="field"><label for="pr-nome">Nome completo</label><input id="pr-nome" type="text" autocomplete="name" placeholder="Nome do profissional"></div>' +
+          '<div class="grid2">' +
+            '<div class="field"><label for="pr-telefone">Telefone</label><input id="pr-telefone" type="tel" autocomplete="tel" placeholder="(31) 99999-9999"></div>' +
+            '<div class="field"><label for="pr-email">E-mail</label><input id="pr-email" type="email" autocomplete="email" placeholder="profissional@email.com"></div>' +
+          '</div>' +
+          '<div class="field"><label for="pr-registro">Registro profissional (CREF/CRN)</label><input id="pr-registro" type="text" placeholder="Número do registro"></div>' +
+          '<div class="field"><label for="pr-especialidade">Especialidade</label><input id="pr-especialidade" type="text" placeholder="Ex.: musculação, nutrição esportiva"></div>' +
+          '<div class="error" id="erro-profissional" role="alert" hidden></div>' +
+          '<div><button class="btn primary" type="submit">Cadastrar profissional</button></div>' +
+        '</form>' +
+        '<aside class="receipt"><h2>Resumo</h2><div class="imc-line"><strong>' + pessoas.length + '</strong><span>PROFISSIONAIS CADASTRADOS</span></div>' +
+          '<p class="note">Os registros ficam salvos neste navegador e podem ser consultados nesta área.</p>' +
+          '<p class="note">Confira os dados e o registro profissional antes de vincular um atendimento.</p></aside>' +
+      '</div>' +
+      '<h2 class="sec-t" style="margin-top:28px">Equipe cadastrada</h2>' +
+      '<div class="cards">' + (pessoas.length ? pessoas.map(function (p) {
+        return '<article class="aluno"><div class="aluno-top"><span class="mat">' + esc(p.tipo) + '</span><span class="badge k-normal">Ativo</span></div>' +
+          '<h3>' + esc(p.nome) + '</h3>' +
+          '<p class="treino-txt"><b>Registro:</b> ' + esc(p.registro || 'Não informado') + '</p>' +
+          '<p class="treino-txt"><b>Especialidade:</b> ' + esc(p.especialidade || 'Não informada') + '</p>' +
+          '<p class="treino-txt"><b>Telefone:</b> ' + esc(p.telefone || 'Não informado') + '</p>' +
+          '<p class="treino-txt"><b>E-mail:</b> ' + esc(p.email || 'Não informado') + '</p>' +
+          '<div class="card-acoes"><button class="btn small danger" type="button" data-rem-prof="' + esc(p.id) + '" data-label="Excluir">Excluir cadastro</button></div></article>';
+      }).join('') : '<div class="empty"><p>Nenhum personal trainer ou nutricionista cadastrado ainda.</p><p>Use o formulário para adicionar o primeiro profissional.</p></div>') + '</div>';
+
+    $('#f-profissional').addEventListener('submit', function (e) {
+      e.preventDefault();
+      var pessoa = {
+        id: newId('p'),
+        tipo: $('#pr-tipo').value,
+        nome: $('#pr-nome').value.trim(),
+        telefone: $('#pr-telefone').value.trim(),
+        email: $('#pr-email').value.trim(),
+        registro: $('#pr-registro').value.trim(),
+        especialidade: $('#pr-especialidade').value.trim()
+      };
+      var err = $('#erro-profissional'), msg = '';
+      if (!pessoa.nome) msg = 'Informe o nome completo do profissional.';
+      else if (pessoa.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(pessoa.email)) msg = 'Informe um e-mail válido.';
+      if (msg) { err.textContent = msg; err.hidden = false; return; }
+      state.profissionais = state.profissionais || [];
+      state.profissionais.push(pessoa);
+      save();
+      views.profissionais();
+      toast(pessoa.tipo + ' cadastrado(a) com sucesso.');
+    });
+  };
+
+  /* ---------- Assinaturas e Cartões (em desenvolvimento) ---------- */
+  function emDesenvolvimento(titulo, texto) {
+    view.innerHTML = head(titulo, texto) +
+      '<div class="obra"><div class="fita" aria-hidden="true"></div>' +
+      '<div class="obra-corpo"><h2>Desculpe o transtorno</h2><p>Área em desenvolvimento.</p><a class="btn primary" href="#alunos">Voltar para os alunos</a></div>' +
+      '<div class="fita" aria-hidden="true"></div></div>';
+  }
+  views.assinaturas = function () { emDesenvolvimento('Assinaturas', 'Planos e mensalidades da academia.'); };
+  views.cartoes = function () { emDesenvolvimento('Cartões', 'Formas de pagamento dos alunos.'); };
+
+  /* ---------- eventos globais ---------- */
+  function armar(btn, aoConfirmar, rotuloConfirmar) {
+    if (btn.getAttribute('data-armed')) { aoConfirmar(); return; }
+    btn.setAttribute('data-armed', '1');
+    btn.textContent = rotuloConfirmar;
+    setTimeout(function () {
+      if (btn.isConnected) { btn.removeAttribute('data-armed'); btn.textContent = btn.getAttribute('data-label'); }
+    }, 4000);
+  }
+  document.addEventListener('click', function (e) {
+    var el;
+    if ((el = e.target.closest('[data-ficha]'))) { buscaAtual = parseInt(el.getAttribute('data-ficha'), 10); irPara('#buscar'); return; }
+    if ((el = e.target.closest('[data-treinos]'))) { alunoSel = parseInt(el.getAttribute('data-treinos'), 10); irPara('#treinos'); return; }
+    if (e.target.closest('[data-novo]')) { modo = { t: 'form', id: null }; drawTreinos(); return; }
+    if ((el = e.target.closest('[data-editar]'))) { modo = { t: 'form', id: el.getAttribute('data-editar') }; drawTreinos(); return; }
+    if ((el = e.target.closest('[data-iniciar]'))) { modo = { t: 'sessao', id: el.getAttribute('data-iniciar') }; drawTreinos(); window.scrollTo(0, 0); return; }
+    if (e.target.closest('[data-voltar]')) { modo = { t: 'lista' }; drawTreinos(); return; }
+    if (e.target.closest('[data-add-ex]')) { $('#rows').insertAdjacentHTML('beforeend', rowHtml()); var ins = $$('.in-nome'); ins[ins.length - 1].focus(); return; }
+    if ((el = e.target.closest('[data-rm]'))) { var row = el.closest('[data-row]'); if ($$('[data-row]').length > 1) row.remove(); else toast('O treino precisa de pelo menos um exercício.'); return; }
+    if (e.target.closest('[data-modelo]')) {
+      var a = findAluno(alunoSel);
+      gerarModelo(a.nivel).forEach(function (t) { a.treinos.push(t); });
+      save(); drawTreinos(); toast('Modelo do nível ' + NIVEIS[a.nivel].nome + ' adicionado.'); return;
+    }
+    if ((el = e.target.closest('[data-excluir]'))) {
+      armar(el, function () {
+        var a2 = findAluno(alunoSel), id = el.getAttribute('data-excluir');
+        a2.treinos = a2.treinos.filter(function (t) { return t.id !== id; });
+        save(); drawTreinos(); toast('Treino excluído.');
+      }, 'Confirmar exclusão');
+      return;
+    }
+    if (e.target.closest('[data-finalizar]')) {
+      var al = findAluno(alunoSel), tr = al.treinos.find(function (x) { return x.id === modo.id; });
+      var boxes = $$('[data-ex]'), feitos = boxes.filter(function (b) { return b.checked; }).length;
+      al.historico.push({ treinoId: tr.id, nome: tr.nome, data: new Date().toISOString() });
+      save();
+      modo = { t: 'lista' };
+      drawTreinos();
+      toast('Treino concluído: ' + feitos + ' de ' + boxes.length + ' exercícios.');
+      return;
+    }
+    if ((el = e.target.closest('[data-rem-prof]'))) {
+      armar(el, function () {
+        var id = el.getAttribute('data-rem-prof');
+        state.profissionais = (state.profissionais || []).filter(function (p) { return p.id !== id; });
+        save(); views.profissionais(); toast('Cadastro removido.');
+      }, 'Confirmar exclusão');
+      return;
+    }
+    var l = e.target.closest('.js-limpar');
+    if (l) {
+      armar(l, function () {
+        state = { demo: false, proxima: 1, alunos: [], profissionais: [] };
+        alunoSel = null; buscaAtual = null;
+        save(); toast('Tudo apagado. Cadastre o primeiro aluno.');
+        irPara('#cadastrar');
+      }, 'Confirmar: apagar tudo');
+      return;
+    }
+    if (e.target.closest('#btn-exemplos')) {
+      state = seed(); alunoSel = null; buscaAtual = null; save(); render(); toast('Exemplos restaurados.');
+    }
+  });
+  document.addEventListener('change', function (e) {
+    if (e.target.matches && e.target.matches('[data-ex]')) atualizaProgresso();
+  });
+  document.addEventListener('submit', function (e) {
+    var f = e.target.closest ? e.target.closest('.peso-form') : null;
+    if (!f) return;
+    e.preventDefault();
+    var a = findAluno(parseInt(f.getAttribute('data-matricula'), 10));
+    var p = parseNum($('#ficha-peso').value);
+    if (!(p >= 20 && p <= 400)) { toast('Informe um peso válido em quilos.'); return; }
+    a.peso = p; save(); drawBusca(); toast('Peso atualizado.');
+  });
+
+  render();
+})();
+</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="./supabase-config.js"></script>
+<script src="./auth.js"></script>
+</body>
+</html>
