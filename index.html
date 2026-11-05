@@ -322,7 +322,7 @@ body.bp-student .app, body.bp-student #bp-auth { display:none !important; }
   </div>
   <main id="view"></main>
   <footer>
-    <span>Os dados ficam salvos só neste navegador.</span>
+    <span>Cadastro de alunos sincronizado com o banco de dados da academia.</span>
     <div class="actions">
       <button class="btn small" type="button" id="btn-exemplos">Restaurar exemplos</button>
       <button class="btn small js-limpar" type="button" data-label="Apagar tudo">Apagar tudo</button>
@@ -331,6 +331,9 @@ body.bp-student .app, body.bp-student #bp-auth { display:none !important; }
 </div>
 <div id="toast" role="status" aria-live="polite"></div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="./supabase-config.js"></script>
+<script src="./auth.js"></script>
 <script>
 (function () {
   'use strict';
@@ -435,6 +438,24 @@ body.bp-student .app, body.bp-student #bp-auth { display:none !important; }
     return { demo: false, proxima: 1, alunos: [], profissionais: [] };
   }
   var state = load();
+  var bpDb = window.BP_SUPABASE_CLIENT || null;
+  async function carregarAlunosDoBanco() {
+    if (!bpDb) return;
+    try {
+      var sessao = await bpDb.auth.getSession();
+      if (!sessao.data.session) return;
+      var perfil = await bpDb.from('profiles').select('role').eq('id', sessao.data.session.user.id).single();
+      if (perfil.error || perfil.data.role !== 'admin') return;
+      var resposta = await bpDb.from('students').select('id, matricula, full_name, age, weight_kg, height_m, training_level').order('matricula');
+      if (resposta.error) throw resposta.error;
+      state.alunos = (resposta.data || []).map(function (r) {
+        return { dbId: r.id, matricula: Number(r.matricula), nome: r.full_name, idade: r.age, peso: Number(r.weight_kg), altura: Number(r.height_m), nivel: r.training_level, treinos: [], historico: [] };
+      });
+      state.proxima = state.alunos.reduce(function (m, a) { return Math.max(m, a.matricula + 1); }, 1);
+      state.demo = false;
+      render();
+    } catch (e) { console.error('Erro ao carregar alunos do Supabase:', e); toast('Não foi possível carregar os alunos do banco.'); }
+  }
   function save() { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) { /* ignora */ } }
   function findAluno(m) { return state.alunos.find(function (a) { return a.matricula === m; }) || null; }
   function fmtData(iso) { return new Date(iso).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }); }
@@ -554,7 +575,7 @@ body.bp-student .app, body.bp-student #bp-auth { display:none !important; }
     previa();
     $('#f-aluno').addEventListener('input', previa);
     $('#f-aluno').addEventListener('change', previa);
-    $('#f-aluno').addEventListener('submit', function (e) {
+    $('#f-aluno').addEventListener('submit', async function (e) {
       e.preventDefault();
       var d = read(), err = $('#erro-aluno'), msg = '';
       if (!d.nome) msg = 'Informe o nome do aluno.';
@@ -562,13 +583,24 @@ body.bp-student .app, body.bp-student #bp-auth { display:none !important; }
       else if (!(d.peso >= 20 && d.peso <= 400)) msg = 'Informe o peso em quilos, por exemplo 70,5.';
       else if (!(d.altura >= 0.5 && d.altura <= 2.5)) msg = 'Informe a altura em metros, por exemplo 1,75.';
       if (msg) { err.textContent = msg; err.hidden = false; return; }
-      var a = { matricula: state.proxima, nome: d.nome, idade: d.idade, peso: d.peso, altura: d.altura, nivel: d.nivel, treinos: $('#al-modelo').checked ? gerarModelo(d.nivel) : [], historico: [] };
-      state.proxima += 1;
-      state.alunos.push(a);
-      save();
-      buscaAtual = a.matricula;
-      toast('Aluno cadastrado. Matrícula: ' + a.matricula);
-      location.hash = '#buscar';
+      var botao = $('#f-aluno button[type=submit]');
+      botao.disabled = true;
+      try {
+        if (!bpDb) throw new Error('Conexão com o banco indisponível. Atualize a página e entre novamente.');
+        var insercao = await bpDb.from('students').insert({ full_name: d.nome, age: d.idade, weight_kg: d.peso, height_m: d.altura, training_level: d.nivel }).select('id, matricula').single();
+        if (insercao.error) throw insercao.error;
+        var a = { dbId: insercao.data.id, matricula: Number(insercao.data.matricula), nome: d.nome, idade: d.idade, peso: d.peso, altura: d.altura, nivel: d.nivel, treinos: $('#al-modelo').checked ? gerarModelo(d.nivel) : [], historico: [] };
+        state.proxima = Math.max(state.proxima, a.matricula + 1);
+        state.alunos.push(a);
+        save();
+        buscaAtual = a.matricula;
+        toast('Aluno cadastrado no banco. Matrícula: ' + a.matricula);
+        location.hash = '#buscar';
+      } catch (erro) {
+        console.error(erro);
+        err.textContent = 'Não foi possível cadastrar no banco: ' + (erro.message || 'verifique a conexão e as permissões.');
+        err.hidden = false;
+      } finally { botao.disabled = false; }
     });
   };
 
@@ -585,6 +617,16 @@ body.bp-student .app, body.bp-student #bp-auth { display:none !important; }
         '<button class="btn small primary" type="button" data-treinos="' + a.matricula + '">Abrir treinos</button></div>' +
       '<form class="peso-form" data-matricula="' + a.matricula + '" novalidate><div class="field"><label for="ficha-peso">Atualizar peso (kg)</label>' +
         '<div class="inline"><input id="ficha-peso" type="text" inputmode="decimal" autocomplete="off" placeholder="' + fN.format(a.peso) + '"><button class="btn" type="submit">Salvar peso</button></div></div></form>' +
+      '<details class="bloco"><summary style="cursor:pointer;font-weight:700">Editar dados do aluno</summary>' +
+        '<form class="edit-aluno-form" data-matricula="' + a.matricula + '" novalidate style="margin-top:14px">' +
+          '<div class="grid2">' +
+            '<div class="field span2"><label>Nome</label><input name="nome" type="text" value="' + esc(a.nome) + '" required></div>' +
+            '<div class="field"><label>Idade</label><input name="idade" type="number" min="1" max="120" value="' + a.idade + '" required></div>' +
+            '<div class="field"><label>Peso (kg)</label><input name="peso" type="text" inputmode="decimal" value="' + String(a.peso).replace('.', ',') + '" required></div>' +
+            '<div class="field"><label>Altura (m)</label><input name="altura" type="text" inputmode="decimal" value="' + String(a.altura).replace('.', ',') + '" required></div>' +
+            '<div class="field"><label>Nível de treino</label><select name="nivel"><option value="1"' + (a.nivel === 1 ? ' selected' : '') + '>Iniciante</option><option value="2"' + (a.nivel === 2 ? ' selected' : '') + '>Intermediário</option><option value="3"' + (a.nivel === 3 ? ' selected' : '') + '>Avançado</option></select></div>' +
+          '</div><div class="error" role="alert" hidden></div><button class="btn primary" type="submit" style="margin-top:12px">Salvar alterações</button>' +
+        '</form></details>' +
       '</article>';
   }
   function drawBusca() {
@@ -888,21 +930,56 @@ body.bp-student .app, body.bp-student #bp-auth { display:none !important; }
   document.addEventListener('change', function (e) {
     if (e.target.matches && e.target.matches('[data-ex]')) atualizaProgresso();
   });
-  document.addEventListener('submit', function (e) {
+  document.addEventListener('submit', async function (e) {
+    var ed = e.target.closest ? e.target.closest('.edit-aluno-form') : null;
+    if (ed) {
+      e.preventDefault();
+      var aluno = findAluno(parseInt(ed.getAttribute('data-matricula'), 10));
+      var nome = ed.elements.nome.value.trim();
+      var idade = parseInt(ed.elements.idade.value, 10);
+      var peso = parseNum(ed.elements.peso.value);
+      var altura = parseNum(ed.elements.altura.value);
+      var nivel = parseInt(ed.elements.nivel.value, 10);
+      var erro = ed.querySelector('.error');
+      var mensagem = '';
+      if (!nome) mensagem = 'Informe o nome do aluno.';
+      else if (!(idade >= 1 && idade <= 120)) mensagem = 'Informe uma idade entre 1 e 120 anos.';
+      else if (!(peso >= 20 && peso <= 400)) mensagem = 'Informe o peso entre 20 e 400 kg.';
+      else if (!(altura >= 0.5 && altura <= 2.5)) mensagem = 'Informe a altura entre 0,50 e 2,50 m.';
+      else if (![1, 2, 3].includes(nivel)) mensagem = 'Selecione um nível de treino válido.';
+      if (mensagem) { erro.textContent = mensagem; erro.hidden = false; return; }
+      var botao = ed.querySelector('button[type=submit]');
+      botao.disabled = true;
+      try {
+        if (!bpDb || !aluno.dbId) throw new Error('Aluno ou conexão com o banco não identificado. Atualize a página e tente novamente.');
+        var atualizacao = await bpDb.from('students').update({
+          full_name: nome, age: idade, weight_kg: peso, height_m: altura, training_level: nivel
+        }).eq('id', aluno.dbId);
+        if (atualizacao.error) throw atualizacao.error;
+        aluno.nome = nome; aluno.idade = idade; aluno.peso = peso; aluno.altura = altura; aluno.nivel = nivel;
+        save(); drawBusca(); toast('Dados do aluno atualizados no banco.');
+      } catch (ex) {
+        console.error(ex);
+        erro.textContent = 'Não foi possível salvar no banco: ' + (ex.message || 'verifique a conexão e as permissões.');
+        erro.hidden = false;
+      } finally { botao.disabled = false; }
+      return;
+    }
     var f = e.target.closest ? e.target.closest('.peso-form') : null;
     if (!f) return;
     e.preventDefault();
     var a = findAluno(parseInt(f.getAttribute('data-matricula'), 10));
     var p = parseNum($('#ficha-peso').value);
     if (!(p >= 20 && p <= 400)) { toast('Informe um peso válido em quilos.'); return; }
-    a.peso = p; save(); drawBusca(); toast('Peso atualizado.');
+    if (!bpDb || !a.dbId) { toast('Não foi possível identificar o aluno no banco.'); return; }
+    var atualizacaoPeso = await bpDb.from('students').update({ weight_kg: p }).eq('id', a.dbId);
+    if (atualizacaoPeso.error) { console.error(atualizacaoPeso.error); toast('Erro ao atualizar o peso no banco.'); return; }
+    a.peso = p; save(); drawBusca(); toast('Peso atualizado no banco.');
   });
 
   render();
+  carregarAlunosDoBanco();
 })();
 </script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="./supabase-config.js"></script>
-<script src="./auth.js"></script>
 </body>
 </html>
