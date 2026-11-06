@@ -120,6 +120,7 @@
       return;
     }
     client = window.supabase.createClient(window.BP_SUPABASE_URL, window.BP_SUPABASE_ANON_KEY);
+    window.BP_SUPABASE_CLIENT = client;
     signupBtn.addEventListener('click', signUp);
     loginBtn.addEventListener('click', () => setMode('login'));
     authForm.addEventListener('submit', signIn);
